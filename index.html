@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>#FFXIVFanFest</title>
+    <title>Event Quest Log</title>
     <style>
         :root {
             /* 抽出カラーパレット */
@@ -947,8 +947,8 @@
 
             <!-- 2店舗切り替えサブタブ -->
             <div class="sub-tab-bar">
-                <button class="sub-tab-btn active" id="cafeTabBtn-0" onclick="switchCafeStore(0)">アニメイトカフェ(1)</button>
-                <button class="sub-tab-btn" id="cafeTabBtn-1" onclick="switchCafeStore(1)">アニメイトカフェ(2)</button>
+                <button class="sub-tab-btn active" id="cafeTabBtn-0" onclick="switchCafeStore(0)">アニメイトカフェ</button>
+                <button class="sub-tab-btn" id="cafeTabBtn-1" onclick="switchCafeStore(1)">エオルゼアカフェ</button>
             </div>
 
             <!-- 金額サマリバー -->
@@ -1119,8 +1119,23 @@
             "メッセージボード記入"
         ];
 
-        // グッズリスト（公式ラインナップ反映）
+        // グッズリスト（公式ラインナップ＋カフェ特典反映）
         const goodsCategories = [
+            {
+                id: "eocafe_benefit",
+                category: "エオカフェ特典 キャラスタンド",
+                items: [
+                    "ブラックキャット", "ハニー・B・ラブリー", "ブルートボンバー", 
+                    " ウィケッドサンダー","ダンシング・グリーン", 
+                    "シュガーライオット", "ヴァンプ・ファタール", , "ハウリングブレード"
+                    "ザ・タイラント", "エクストリームズ"
+                ]
+            },
+            {
+                id: "anicafe_benefit",
+                category: "アニカフェ特典 コースター",
+                items: [["アルフィノ", "アリゼー", "ヤ・シュトラ", "サンクレッド", "ウリエンジェ", "エスティニアン", "グラ・ハ・ティア", "クルル", "タタル"]
+            },
             {
                 id: "flight_tag",
                 category: "フライトタグキーホルダー",
@@ -1153,11 +1168,11 @@
             }
         ];
 
-        // カフェ・フード店舗メニュー（アニメイトカフェ出張版）
+        // カフェ・フード店舗メニュー
         const cafeStores = [
             {
                 id: "store_a",
-                name: "アニメイトカフェ出張版 (ドリンク&フード)",
+                name: "アニメイトカフェ出張版",
                 menu: [
                     { name: "ロールドリンク TANK", price: 900 },
                     { name: "ロールドリンク HEALER", price: 900 },
@@ -1166,17 +1181,30 @@
                     { name: "配給のもちもちメオル", price: 500 },
                     { name: "パーフェクトバー", price: 900 },
                     { name: "タコスのチーちゃん特製タコスチップス", price: 900 },
-                    { name: "ポポトスナック", price: 1200 }
-                ]
-            },
-            {
-                id: "store_b",
-                name: "アニメイトカフェ出張版 (スイーツ&他)",
-                menu: [
+                    { name: "ポポトスナック", price: 1200 },
                     { name: "型抜き黒魔道士クッキー", price: 900 },
                     { name: "アイシングクッキー「黒魔紋」", price: 650 },
                     { name: "禁断のマテリアのかけら琥珀糖", price: 1500 },
                     { name: "ハニー・B・ラブリーのハチミツレモンゼリー", price: 1000 }
+                ]
+            },
+            {
+                id: "store_b",
+                name: "エオルゼアカフェ",
+                menu: [
+                    { name: "ブルートボンバーのボンバリアンスペシャルトマトパスタ", price: 1500 },
+                    { name: "オルシュファンのイイ！クリームシチュー", price: 1500 },
+                    { name: "アルカディアの圧政者！特製カルビ焼肉丼", price: 1700 },
+                    { name: "グリーナーの携帯食料", price: 1200 },
+                    { name: "黄金のパニーニ", price: 1200 },
+                    { name: "ハニー・B・ラブリーVSヴァンプ・ファタール！夢のマッチメイクアップルパイ", price: 1400 },
+                    { name: "ヤーンのバナナチョコワッフル", price: 1200 },
+                    { name: "白銀のワンダラー", price: 990 },
+                    { name: "スフェーンのホワイトオランジュ", price: 990 },
+                    { name: "エクストリームズの波乗りソーダ", price: 990 },
+                    { name: "ダンシング・グリーン パーティーフィズ", price: 990 },
+                    { name: "ブラックキャットのクロスネイルレモネード", price: 990 },
+                    { name: "エオルゼアカフェ オリジナルラベル缶（レモンスカッシュ）", price: 900 }
                 ]
             }
         ];
