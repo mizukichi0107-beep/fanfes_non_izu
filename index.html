@@ -1079,7 +1079,7 @@
         // ==========================================
         const thisYear = new Date().getFullYear();
 
-        const TIMELINE_START_HOUR = 10;
+        const TIMELINE_START_HOUR = 9;
         const TIMELINE_END_HOUR = 21;
         const PX_PER_MINUTE = 1.05;
 
@@ -1087,18 +1087,7 @@
         const stageSchedule = [
             {
                 day: "1日目 (10/31 土曜)",
-                date: `${thisYear}-10-31`,
-                list: [
-                    { name: "基調講演", time: "11:00", endTime: "13:00" },
-                    { name: "クリコン セミファイナル", time: "15:00", endTime: "16:30" },
-                    { name: "吉田Pの一問一答タイムアタック！", time: "16:30", endTime: "17:00" },
-                    { name: "クリコン ファイナル", time: "17:00", endTime: "18:30" },
-                    { name: "ピアノコンサート", time: "19:30", endTime: "20:30" }
-                ]
-            },
-            {
-                day: "2日目 (11/01 日曜)",
-                date: `${thisYear}-11-01`,
+                date: `${thisYear}-10-31`, list: [ { name: "🤝 待ち合わせ", time: "09:45", endTime: "10:30" }, { name: "基調講演", time: "11:00", endTime: "13:00" }, { name: "クリコン セミファイナル", time: "15:00", endTime: "16:30" }, { name: "吉田Pの一問一答タイムアタック！", time: "16:30", endTime: "17:00" }, { name: "クリコン ファイナル", time: "17:00", endTime: "18:30" }, { name: "ピアノコンサート", time: "19:30", endTime: "20:30" } ] }, { day: "2日目 (11/01 日曜)", date: `${thisYear}-11-01`,
                 list: [
                     { name: "開発パネル", time: "10:30", endTime: "12:00" },
                     { name: "LIVE Q&A", time: "12:30", endTime: "13:30" },
@@ -1123,18 +1112,18 @@
         const goodsCategories = [
             {
                 id: "eocafe_benefit",
-                category: "エオカフェ特典 キャラスタンド",
+                category: "エオカフェ特典 アクスタ",
                 items: [
                     "ブラックキャット", "ハニー・B・ラブリー", "ブルートボンバー", 
-                    " ウィケッドサンダー","ダンシング・グリーン", 
-                    "シュガーライオット", "ヴァンプ・ファタール", , "ハウリングブレード"
-                    "ザ・タイラント", "エクストリームズ"
+                    "ウィキッドホワイト", "ヤーン", "ドーピング・グリーン", 
+                    "ブラックキャット(変身)", "ヴァンプ・ファタール", 
+                    "フルスロットル・ブルートボンバー", "エクストリームズ"
                 ]
             },
             {
                 id: "anicafe_benefit",
                 category: "アニカフェ特典 コースター",
-                items: [["アルフィノ", "アリゼー", "ヤ・シュトラ", "サンクレッド", "ウリエンジェ", "エスティニアン", "グラ・ハ・ティア", "クルル", "タタル"]
+                items: ["コースター Type-A", "コースター Type-B", "コースター Type-C", "コースター Type-D", "コースター Type-E", "コースター Type-F", "コースター Type-G", "コースター Type-H", "コースター Type-I", "コースター Type-J"]
             },
             {
                 id: "flight_tag",
@@ -1224,118 +1213,7 @@
         function switchMainTab(tabName) {
             triggerHaptic();
             ['goods', 'schedule', 'cafe', 'guide'].forEach(name => {
-                document.getElementById(`view-${name}`).classList.toggle('active', name === tabName);
-            });
-
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach((btn, idx) => {
-                const target = ['goods', 'schedule', 'cafe', 'guide'][idx];
-                btn.classList.toggle('active', target === tabName);
-            });
-
-            window.scrollTo({ top: 0, behavior: 'instant' });
-        }
-
-        let selectedScheduleDayIndex = 0;
-
-        function switchScheduleDay(dayIndex) {
-            triggerHaptic();
-            selectedScheduleDayIndex = dayIndex;
-            document.getElementById('schedBtn-day1').classList.toggle('active', dayIndex === 0);
-            document.getElementById('schedBtn-day2').classList.toggle('active', dayIndex === 1);
-            renderTimeline();
-        }
-
-        let selectedCafeStoreIndex = 0;
-
-        function switchCafeStore(storeIndex) {
-            triggerHaptic();
-            selectedCafeStoreIndex = storeIndex;
-            document.getElementById('cafeTabBtn-0').classList.toggle('active', storeIndex === 0);
-            document.getElementById('cafeTabBtn-1').classList.toggle('active', storeIndex === 1);
-            renderCafe();
-        }
-
-        // 幕張メッセの天気取得
-        function fetchMakuhariWeather() {
-            const lat = 35.648;
-            const lon = 140.035;
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=Asia%2FTokyo`;
-
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.current) {
-                        const temp = Math.round(data.current.temperature_2m * 10) / 10;
-                        const code = data.current.weather_code;
-                        let weatherIcon = "🌤️";
-                        if (code === 0) weatherIcon = "☀️";
-                        else if (code >= 1 && code <= 3) weatherIcon = "⛅";
-                        else if (code >= 51 && code <= 67) weatherIcon = "🌧️";
-                        else if (code >= 95) weatherIcon = "⛈️";
-
-                        document.getElementById('weatherDisplay').textContent = `${weatherIcon} 幕張 ${temp}℃`;
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('weatherDisplay').textContent = `🌤️ 幕張メッセ`;
-                });
-        }
-        fetchMakuhariWeather();
-        setInterval(fetchMakuhariWeather, 60 * 60 * 1000);
-
-        // URL共有データの復元
-        function loadFromURL() {
-            const params = new URLSearchParams(window.location.search);
-            const dataStr = params.get('data');
-            if (dataStr) {
-                try {
-                    const decoded = JSON.parse(decodeURIComponent(escape(atob(dataStr))));
-                    if (confirm("共有URLから記録データを復元しますか？")) {
-                        localStorage.setItem('ff_all_inv', JSON.stringify(decoded.inv || {}));
-                        localStorage.setItem('ff_all_fieldact', JSON.stringify(decoded.fieldact || {}));
-                        localStorage.setItem('ff_all_favs', JSON.stringify(decoded.favs || {}));
-                        localStorage.setItem('ff_all_cafe', JSON.stringify(decoded.cafe || {}));
-                        localStorage.setItem('ff_all_memo', decoded.memo || "");
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                        showToast("復元しました");
-                    }
-                } catch (e) {
-                    console.error("URL解析エラー", e);
-                }
-            }
-        }
-        loadFromURL();
-
-        let inventory = JSON.parse(localStorage.getItem('ff_all_inv')) || {};
-        let fieldActivityStatus = JSON.parse(localStorage.getItem('ff_all_fieldact')) || {};
-        let favorites = JSON.parse(localStorage.getItem('ff_all_favs')) || {};
-        let cafeOrders = JSON.parse(localStorage.getItem('ff_all_cafe')) || {};
-
-        let activeCategoryId = goodsCategories[0]?.id || "";
-        let currentModalGroupId = 'all';
-        let currentMode = 'all';
-
-        function saveMemo() {
-            const val = document.getElementById('quickMemo').value;
-            localStorage.setItem('ff_all_memo', val);
-        }
-
-        function timeToMinutes(timeStr) {
-            const [h, m] = timeStr.split(':').map(Number);
-            return h * 60 + m;
-        }
-
-        // カレンダータイムライン描画
-        function renderTimeline() {
-            const now = new Date();
-            const sched = stageSchedule[selectedScheduleDayIndex];
-            const hoursContainer = document.getElementById('timelineHoursContainer');
-            const eventsContainer = document.getElementById('timelineEventsContainer');
-
-            let hoursHtml = "";
-            for (let h = TIMELINE_START_HOUR; h <= TIMELINE_END_HOUR; h++) {
-                const timeLabel = `${String(h).padStart(2, '0')}:00`;
+                document.getElementById(`view-${name}`).classList.toggle('active', name === tabName); });  const navItems = document.querySelectorAll('.nav-item'); navItems.forEach((btn, idx) => { const target = ['goods', 'schedule', 'cafe', 'guide'][idx]; btn.classList.toggle('active', target === tabName); });  window.scrollTo({ top: 0, behavior: 'instant' }); }  let selectedScheduleDayIndex = 0;  function switchScheduleDay(dayIndex) { triggerHaptic(); selectedScheduleDayIndex = dayIndex; document.getElementById('schedBtn-day1').classList.toggle('active', dayIndex === 0); document.getElementById('schedBtn-day2').classList.toggle('active', dayIndex === 1); renderTimeline(); }  let selectedCafeStoreIndex = 0;  function switchCafeStore(storeIndex) { triggerHaptic(); selectedCafeStoreIndex = storeIndex; document.getElementById('cafeTabBtn-0').classList.toggle('active', storeIndex === 0); document.getElementById('cafeTabBtn-1').classList.toggle('active', storeIndex === 1); renderCafe(); }  // 幕張メッセの天気取得 function fetchMakuhariWeather() { const lat = 35.648; const lon = 140.035; const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=Asia\%2FTokyo`;  fetch(url) .then(res => res.json()) .then(data => { if (data && data.current) { const temp = Math.round(data.current.temperature_2m * 10) / 10; const code = data.current.weather_code; let weatherIcon = "🌤️"; if (code === 0) weatherIcon = "☀️"; else if (code >= 1 && code <= 3) weatherIcon = "⛅"; else if (code >= 51 && code <= 67) weatherIcon = "🌧️"; else if (code >= 95) weatherIcon = "⛈️";  document.getElementById('weatherDisplay').textContent = `${weatherIcon} 幕張 ${temp}℃`; } }) .catch(() => { document.getElementById('weatherDisplay').textContent = `🌤️ 幕張メッセ`; }); } fetchMakuhariWeather(); setInterval(fetchMakuhariWeather, 60 * 60 * 1000);  // URL共有データの復元 function loadFromURL() { const params = new URLSearchParams(window.location.search); const dataStr = params.get('data'); if (dataStr) { try { const decoded = JSON.parse(decodeURIComponent(escape(atob(dataStr)))); if (confirm("共有URLから記録データを復元しますか？")) { localStorage.setItem('ff_all_inv', JSON.stringify(decoded.inv \vert{}\vert{} {})); localStorage.setItem('ff_all_fieldact', JSON.stringify(decoded.fieldact \vert{}\vert{} {})); localStorage.setItem('ff_all_favs', JSON.stringify(decoded.favs \vert{}\vert{} {})); localStorage.setItem('ff_all_cafe', JSON.stringify(decoded.cafe \vert{}\vert{} {})); localStorage.setItem('ff_all_memo', decoded.memo \vert{}\vert{} ""); window.history.replaceState({}, document.title, window.location.pathname); showToast("復元しました"); } } catch (e) { console.error("URL解析エラー", e); } } } loadFromURL();  let inventory = JSON.parse(localStorage.getItem('ff_all_inv')) \vert{}\vert{} {}; let fieldActivityStatus = JSON.parse(localStorage.getItem('ff_all_fieldact')) \vert{}\vert{} {}; let favorites = JSON.parse(localStorage.getItem('ff_all_favs')) \vert{}\vert{} {}; let cafeOrders = JSON.parse(localStorage.getItem('ff_all_cafe')) \vert{}\vert{} {};  let activeCategoryId = goodsCategories[0]?.id \vert{}\vert{} ""; let currentModalGroupId = 'all'; let currentMode = 'all';  function saveMemo() { const val = document.getElementById('quickMemo').value; localStorage.setItem('ff_all_memo', val); }  function timeToMinutes(timeStr) { const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }  // カレンダータイムライン描画 function renderTimeline() { const now = new Date(); const sched = stageSchedule[selectedScheduleDayIndex]; const hoursContainer = document.getElementById('timelineHoursContainer'); const eventsContainer = document.getElementById('timelineEventsContainer');  let hoursHtml = ""; for (let h = TIMELINE_START_HOUR; h <= TIMELINE_END_HOUR; h++) { const timeLabel = `${String(h).padStart(2, '0')}:00`;
                 hoursHtml += `
                     <div class="hour-row" style="height: ${60 * PX_PER_MINUTE}px;">
                         <span class="hour-label">${timeLabel}</span>
@@ -1372,7 +1250,7 @@
 
                 return `
                     <div class="timeline-event-card ${statusClass}"
-                         style="top: ${topPx}px; height: ${heightPx}px;">
+                         style="top: ${topPx}px; height:${heightPx}px;">
                         <div class="tl-info">
                             <span class="tl-name">${item.name}</span>
                             <span class="tl-time-badge">${timeStr}</span>
@@ -1402,20 +1280,7 @@
 
                 if (currentMinutes >= baseMinutes && currentMinutes <= endMinutes) {
                     const topPx = (currentMinutes - baseMinutes) * PX_PER_MINUTE;
-                    nowIndicator.style.top = `${topPx}px`;
-                    nowIndicator.style.display = 'block';
-                    return;
-                }
-            }
-            nowIndicator.style.display = 'none';
-        }
-
-        // カフェ・フード描画＆計算
-        function renderCafe() {
-            const currentStore = cafeStores[selectedCafeStoreIndex];
-            document.getElementById('cafeTabBtn-0').textContent = cafeStores[0].name;
-            document.getElementById('cafeTabBtn-1').textContent = cafeStores[1].name;
-            document.getElementById('cafeStoreTotalLabel').textContent = `${currentStore.name}の小計`;
+                    nowIndicator.style.top = `${topPx}px`; nowIndicator.style.display = 'block'; return; } } nowIndicator.style.display = 'none'; }  // カフェ・フード描画＆計算 function renderCafe() { const currentStore = cafeStores[selectedCafeStoreIndex]; document.getElementById('cafeTabBtn-0').textContent = cafeStores[0].name; document.getElementById('cafeTabBtn-1').textContent = cafeStores[1].name; document.getElementById('cafeStoreTotalLabel').textContent = `${currentStore.name}の小計`;
 
             let storeTotal = 0;
             let grandTotal = 0;
@@ -1432,8 +1297,7 @@
                 });
             });
 
-            document.getElementById('cafeStoreTotal').textContent = `¥${storeTotal.toLocaleString()}`;
-            document.getElementById('cafeGrandTotal').textContent = `¥${grandTotal.toLocaleString()}`;
+            document.getElementById('cafeStoreTotal').textContent = `¥${storeTotal.toLocaleString()}`; document.getElementById('cafeGrandTotal').textContent = `¥${grandTotal.toLocaleString()}`;
 
             const listContainer = document.getElementById('cafeMenuListContainer');
             listContainer.innerHTML = currentStore.menu.map(item => {
@@ -1486,24 +1350,7 @@
                     const count = cafeOrders[key] || 0;
                     if (count > 0) {
                         const sum = count * item.price;
-                        storeItems.push(`・${item.name} × ${count} (¥${sum.toLocaleString()})`);
-                        storeSubtotal += sum;
-                        grandTotal += sum;
-                    }
-                });
-
-                if (storeItems.length > 0) {
-                    text += `\n■ ${store.name} [小計: ¥${storeSubtotal.toLocaleString()}]\n`;
-                    text += storeItems.join('\n') + '\n';
-                }
-            });
-
-            if (grandTotal === 0) {
-                showToast("メニューが選択されていません");
-                return;
-            }
-
-            text += `\n━━━━━━━━━━\n合計金額：¥${grandTotal.toLocaleString()}`;
+                        storeItems.push(`・${item.name} ×${count} (¥${sum.toLocaleString()})`); storeSubtotal += sum; grandTotal += sum; } });  if (storeItems.length > 0) { text += `\n■ ${store.name} [小計: ¥${storeSubtotal.toLocaleString()}]\n`; text += storeItems.join('\n') + '\n'; } });  if (grandTotal === 0) { showToast("メニューが選択されていません"); return; }  text += `\n━━━━━━━━━━\n合計金額：¥${grandTotal.toLocaleString()}`;
 
             navigator.clipboard.writeText(text).then(() => {
                 showToast("注文サマリをコピーしました！");
@@ -1517,45 +1364,7 @@
             const h = String(now.getHours()).padStart(2, '0');
             const m = String(now.getMinutes()).padStart(2, '0');
             const s = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('clockDisplay').textContent = `${h}:${m}:${s}`;
-
-            updateNextEvent(now);
-            updateNowIndicator();
-        }
-        setInterval(tick, 1000);
-
-        function updateNextEvent(now) {
-            let upcoming = null;
-            let minDiffMs = Infinity;
-
-            stageSchedule.forEach(sched => {
-                sched.list.forEach(item => {
-                    const targetTime = new Date(`${sched.date}T${item.time}:00`);
-                    const diffMs = targetTime - now;
-
-                    if (diffMs >= 0 && diffMs < minDiffMs) {
-                        minDiffMs = diffMs;
-                        upcoming = {
-                            ...item,
-                            dayLabel: sched.day,
-                            diffMinutes: Math.floor(diffMs / 60000),
-                            diffHours: Math.floor(diffMs / 3600000),
-                            diffDays: Math.floor(diffMs / 86400000)
-                        };
-                    }
-                });
-            });
-
-            const card = document.getElementById('nextEventCard');
-            const nameElem = document.getElementById('nextEventName');
-            const countdownElem = document.getElementById('nextEventCountdown');
-
-            if (upcoming) {
-                nameElem.textContent = `${upcoming.name} (${upcoming.time}〜)`;
-                if (upcoming.diffMinutes === 0) {
-                    countdownElem.textContent = "まもなく開始";
-                } else if (upcoming.diffMinutes < 60) {
-                    countdownElem.textContent = `あと${upcoming.diffMinutes}分`;
+            document.getElementById('clockDisplay').textContent = `${h}:${m}:${s}`;  updateNextEvent(now); updateNowIndicator(); } setInterval(tick, 1000);  function updateNextEvent(now) { let upcoming = null; let minDiffMs = Infinity;  stageSchedule.forEach(sched => { sched.list.forEach(item => { const targetTime = new Date(`${sched.date}T${item.time}:00`); const diffMs = targetTime - now;  if (diffMs >= 0 && diffMs < minDiffMs) { minDiffMs = diffMs; upcoming = { ...item, dayLabel: sched.day, diffMinutes: Math.floor(diffMs / 60000), diffHours: Math.floor(diffMs / 3600000), diffDays: Math.floor(diffMs / 86400000) }; } }); });  const card = document.getElementById('nextEventCard'); const nameElem = document.getElementById('nextEventName'); const countdownElem = document.getElementById('nextEventCountdown');  if (upcoming) { nameElem.textContent = `${upcoming.name} (${upcoming.time}〜)`; if (upcoming.diffMinutes === 0) { countdownElem.textContent = "まもなく開始"; } else if (upcoming.diffMinutes < 60) { countdownElem.textContent = `あと${upcoming.diffMinutes}分`;
                 } else if (upcoming.diffHours < 24) {
                     countdownElem.textContent = `あと${upcoming.diffHours}時間${upcoming.diffMinutes % 60}分`;
                 } else {
@@ -1627,192 +1436,8 @@
                                     ${isFav ? '★' : '☆'}
                                 </button>
                                 <div class="goods-name-wrap">
-                                    <span class="goods-name ${isFav ? 'is-fav' : ''}">${name}</span>
-                                    ${badgeHtml}
+                                    <span class="goods-name ${isFav ? 'is-fav' : ''}">${name}</span>${badgeHtml}
                                 </div>
                             </div>
                             <div class="goods-controls">
-                                <button class="btn-ctrl" onclick="changeCount('${name}', -1)">−</button>
-                                <span class="count-value">${count}</span>
-                                <button class="btn-ctrl plus" onclick="changeCount('${name}', 1)">+</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            const savedMemo = localStorage.getItem('ff_all_memo');
-            if (savedMemo !== null) {
-                document.getElementById('quickMemo').value = savedMemo;
-            }
-
-            tick();
-
-            localStorage.setItem('ff_all_inv', JSON.stringify(inventory));
-            localStorage.setItem('ff_all_fieldact', JSON.stringify(fieldActivityStatus));
-            localStorage.setItem('ff_all_favs', JSON.stringify(favorites));
-        }
-
-        function toggleFieldActivity(act) {
-            triggerHaptic();
-            fieldActivityStatus[act] = !fieldActivityStatus[act];
-            render();
-        }
-
-        function selectCategory(id) {
-            triggerHaptic();
-            activeCategoryId = id;
-            render();
-        }
-
-        function toggleFav(name) {
-            triggerHaptic();
-            favorites[name] = !favorites[name];
-            render();
-        }
-
-        function changeCount(name, delta) {
-            triggerHaptic();
-            const current = inventory[name] || 0;
-            inventory[name] = Math.max(0, current + delta);
-            render();
-        }
-
-        function openMapLightbox() {
-            const mapImg = document.getElementById('eventMapImage');
-            if (mapImg.style.display !== 'none') {
-                document.getElementById('mapLightbox').classList.add('active');
-            }
-        }
-        function closeMapLightbox() {
-            document.getElementById('mapLightbox').classList.remove('active');
-        }
-
-        function generateText(targetGroupId, mode) {
-            let text = "";
-            const targets = targetGroupId === 'all'
-                ? goodsCategories
-                : goodsCategories.filter(g => g.id === targetGroupId);
-
-            targets.forEach((group, idx) => {
-                if (mode === 'trade') {
-                    const gives = [];
-                    const wants = [];
-                    group.items.forEach(item => {
-                        const count = inventory[item] || 0;
-                        const isFav = favorites[item];
-                        if (count >= 2) {
-                            gives.push(`${item}×${count - 1}`);
-                        } else if (count === 0) {
-                            wants.push(isFav ? `${item}(本命)` : item);
-                        }
-                    });
-
-                    text += `【交換募集：${group.category}】\n`;
-                    text += `譲：${gives.length > 0 ? gives.join('、') : '（余りなし）'}\n`;
-                    text += `求：${wants.length > 0 ? wants.join('、') : '（指定なし）'}\n`;
-                } else {
-                    let groupText = `【${group.category}】\n`;
-                    let countAdded = 0;
-                    group.items.forEach(item => {
-                        const count = inventory[item] || 0;
-                        const isFav = favorites[item] ? '★' : '';
-                        if (mode === 'owned') {
-                            if (count > 0) {
-                                groupText += `・${item}${isFav}：${count}\n`;
-                                countAdded++;
-                            }
-                        } else {
-                            groupText += `・${item}${isFav}：${count}\n`;
-                            countAdded++;
-                        }
-                    });
-                    if (mode === 'owned' && countAdded === 0) groupText += `・（未所持）\n`;
-                    text += groupText;
-                }
-                if (idx < targets.length - 1) text += "\n";
-            });
-            return text.trim();
-        }
-
-        function openCurrentGroupModal() {
-            openSummaryModal(activeCategoryId);
-        }
-
-        function openSummaryModal(targetGroupId) {
-            triggerHaptic();
-            currentModalGroupId = targetGroupId;
-            const titleElem = document.getElementById('modalTitle');
-            if (targetGroupId === 'all') {
-                titleElem.innerText = "全グッズのサマリ出力";
-            } else {
-                const group = goodsCategories.find(g => g.id === targetGroupId);
-                titleElem.innerText = `【${group.category}】サマリ出力`;
-            }
-            changeSummaryMode(currentMode);
-            document.getElementById('summaryModal').classList.add('active');
-        }
-
-        function changeSummaryMode(mode) {
-            triggerHaptic();
-            currentMode = mode;
-            ['all', 'owned', 'trade'].forEach(m => {
-                document.getElementById(`mode-${m}`).classList.toggle('active', m === mode);
-            });
-            document.getElementById('previewText').value = generateText(currentModalGroupId, mode);
-        }
-
-        function closeModal() {
-            document.getElementById('summaryModal').classList.remove('active');
-        }
-
-        function executeCopy() {
-            triggerHaptic();
-            const text = document.getElementById('previewText').value;
-            if (!text) return;
-
-            navigator.clipboard.writeText(text).then(() => {
-                showToast("クリップボードにコピーしました");
-                closeModal();
-            }).catch(() => {
-                showToast("枠内の文字を手動コピーしてください");
-            });
-        }
-
-        function shareViaURL() {
-            triggerHaptic();
-            const dataObj = {
-                inv: inventory,
-                fieldact: fieldActivityStatus,
-                favs: favorites,
-                cafe: cafeOrders,
-                memo: document.getElementById('quickMemo').value
-            };
-            const jsonStr = JSON.stringify(dataObj);
-            const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
-            const shareURL = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
-
-            navigator.clipboard.writeText(shareURL).then(() => {
-                showToast("共有URLをコピーしました");
-            }).catch(() => {
-                prompt("URLをコピーして送ってください：", shareURL);
-            });
-        }
-
-        function resetAll() {
-            if (confirm("入力データをすべて初期化しますか？")) {
-                inventory = {};
-                fieldActivityStatus = {};
-                favorites = {};
-                cafeOrders = {};
-                localStorage.removeItem('ff_all_memo');
-                document.getElementById('quickMemo').value = "";
-                render();
-                showToast("データを初期化しました");
-            }
-        }
-
-        render();
-    </script>
-</body>
-</html>
+                                <button class="btn-ctrl" onclick="changeCount('${name}', -
