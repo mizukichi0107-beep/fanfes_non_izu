@@ -212,7 +212,6 @@
         }
 
         .hour-row {
-            height: 60px;
             position: relative;
             border-top: 1px dashed #EDE7E1;
         }
@@ -497,7 +496,7 @@
             color: var(--c-espresso);
         }
 
-        /* ==================== カフェ・フード計算スタイル ==================== */
+        /* カフェ・フード計算スタイル */
         .cafe-total-box {
             background: #FDFBF8;
             border: 1.5px solid var(--border);
@@ -686,7 +685,7 @@
         .link-title { font-size: 0.82rem; font-weight: 700; }
         .link-desc { font-size: 0.68rem; color: var(--text-muted); }
 
-        /* ボトムナビゲーションバー（4タブ対応） */
+        /* ボトムナビゲーションバー */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -948,18 +947,18 @@
 
             <!-- 2店舗切り替えサブタブ -->
             <div class="sub-tab-bar">
-                <button class="sub-tab-btn active" id="cafeTabBtn-0" onclick="switchCafeStore(0)">店舗A (エオカフェ)</button>
-                <button class="sub-tab-btn" id="cafeTabBtn-1" onclick="switchCafeStore(1)">店舗B (キッチンカー)</button>
+                <button class="sub-tab-btn active" id="cafeTabBtn-0" onclick="switchCafeStore(0)">アニメイトカフェ(1)</button>
+                <button class="sub-tab-btn" id="cafeTabBtn-1" onclick="switchCafeStore(1)">アニメイトカフェ(2)</button>
             </div>
 
             <!-- 金額サマリバー -->
             <div class="cafe-total-box">
                 <div>
-                    <div class="cafe-total-label" id="cafeStoreTotalLabel">店舗Aの合計</div>
+                    <div class="cafe-total-label" id="cafeStoreTotalLabel">店舗Aの小計</div>
                     <div class="cafe-total-amount" id="cafeStoreTotal">¥0</div>
                 </div>
                 <div style="text-align: right;">
-                    <div class="cafe-total-label">2店舗 総合計</div>
+                    <div class="cafe-total-label">総合計</div>
                     <div style="font-size: 0.95rem; font-weight: 700; color: var(--c-terracotta);" id="cafeGrandTotal">¥0</div>
                 </div>
             </div>
@@ -1025,7 +1024,7 @@
         </section>
     </div>
 
-    <!-- ボトムナビゲーション（4タブ） -->
+    <!-- ボトムナビゲーション -->
     <nav class="bottom-nav">
         <button class="nav-item active" onclick="switchMainTab('goods')">
             <span class="nav-icon">🎁</span>
@@ -1049,7 +1048,7 @@
     <div id="summaryModal" class="modal">
         <div class="modal-content">
             <div class="modal-header" id="modalTitle">サマリ出力</div>
-            
+
             <div class="tab-mode-group">
                 <button class="mode-btn active" id="mode-all" onclick="changeSummaryMode('all')">すべて</button>
                 <button class="mode-btn" id="mode-owned" onclick="changeSummaryMode('owned')">所持のみ</button>
@@ -1057,7 +1056,7 @@
             </div>
 
             <textarea class="preview-textarea" id="previewText" placeholder="内容を確認・追記できます"></textarea>
-            
+
             <div class="modal-footer">
                 <button class="btn-modal cancel" onclick="closeModal()">閉じる</button>
                 <button class="btn-modal copy" onclick="executeCopy()">コピーする</button>
@@ -1120,52 +1119,64 @@
             "メッセージボード記入"
         ];
 
-        // グッズリスト
+        // グッズリスト（公式ラインナップ反映）
         const goodsCategories = [
             {
-                id: "coaster",
-                category: "コースター",
-                items: ["サンクレッド", "ヤシュトラ", "アリゼー", "ウリエンジェ", "エスティニアン", "グラハ・ティア"]
+                id: "flight_tag",
+                category: "フライトタグキーホルダー",
+                items: ["アルフィノ", "アリゼー", "ヤ・シュトラ", "サンクレッド", "ウリエンジェ", "エスティニアン", "グラ・ハ・ティア", "クルル", "タタル"]
             },
             {
-                id: "can_badge",
-                category: "缶バッジ",
-                items: ["アルフィノ", "アリゼー", "タタル", "クルル", "エメトセルク", "ヒュトロダエウス"]
+                id: "magnet_plush",
+                category: "マグネットプチぬいぐるみ",
+                items: ["サブカル・モーグリ", "マグテンダー", "タイニーヤーン", "古代人", "ウーパールーパー", "ブラッククアール"]
             },
             {
-                id: "acrylic",
-                category: "アクリルスタンド",
-                items: ["ゼノス", "ヴェーネス", "ヘルメス", "ハイデリン", "ゾディアーク"]
+                id: "acrylic_block",
+                category: "ミニアクリルブロック Vol.3",
+                items: ["ニュー・アリゼー", "ニュー・ウリエンジェ", "ニュー・タタル", "ニュー・クルル", "マメット・ナマズオ", "マメット・アルバート", "マメット・オルシュファン", "マメット・テミス", "マメット・ヨツユ", "マメット・ゼロ"]
             },
             {
-                id: "sticker",
-                category: "ステッカー",
-                items: ["チョコボ", "モーグリ", "ナマズオ", "ファットキャット"]
+                id: "mini_pouch",
+                category: "ミニポーチコレクション",
+                items: ["タコスのチーちゃん", "レギュレーター", "アラガン・トームストーン：神学", "アルパカ", "アゾムのクリスタル"]
+            },
+            {
+                id: "music_keychain",
+                category: "ミュージックコレクションキーチェーン",
+                items: ["Dawntrail", "ENDWALKER", "THE PRIMALS", "Piano Collections", "PULSE 1", "PULSE 2", "Sanctuary", "A Realm Reborn", "Before the Fall"]
+            },
+            {
+                id: "battle_icon",
+                category: "ワンマークコレクション（ジョブアイコン）",
+                items: ["インビンシブル", "フィロソフィア", "バトルボイス", "ホルムギャング", "極限加速", "オートマトン・クイーン", "リビングデッド", "バトルリタニ―", "攻めのタンゴ", "ボーライド", "光 provides", "疾風怒濤の計", "テンペランス", "手裏剣", "シアリングライト", "疾風怒濤の計2", "アルケインサークル", "エンボルデン", "ディヴィネーション", "蛇の霊気", "イマジンスカイ"]
             }
         ];
 
-        // カフェ・フード店舗メニュー（2店舗ぶんの雛形：ここを自由に書き換えられます）
+        // カフェ・フード店舗メニュー（アニメイトカフェ出張版）
         const cafeStores = [
             {
                 id: "store_a",
-                name: "店舗A (エオカフェ出張店)",
+                name: "アニメイトカフェ出張版 (ドリンク&フード)",
                 menu: [
-                    { name: "デブチョコボまん", price: 650 },
-                    { name: "騎士団のレーション（カレー）", price: 1200 },
-                    { name: "モーグリのふわふわパンケーキ", price: 950 },
-                    { name: "青魔道士のブルードリンク", price: 750 },
-                    { name: "赤魔道士のベリーソーダ", price: 750 }
+                    { name: "ロールドリンク TANK", price: 900 },
+                    { name: "ロールドリンク HEALER", price: 900 },
+                    { name: "ロールドリンク DPS", price: 900 },
+                    { name: "ランダムバフドリンク", price: 900 },
+                    { name: "配給のもちもちメオル", price: 500 },
+                    { name: "パーフェクトバー", price: 900 },
+                    { name: "タコスのチーちゃん特製タコスチップス", price: 900 },
+                    { name: "ポポトスナック", price: 1200 }
                 ]
             },
             {
                 id: "store_b",
-                name: "店舗B (コラボキッチンカー)",
+                name: "アニメイトカフェ出張版 (スイーツ&他)",
                 menu: [
-                    { name: "タタル特製ポテトフライ", price: 600 },
-                    { name: "クリスタリウムサンドイッチ", price: 1100 },
-                    { name: "オメガの漆黒唐揚げ丼", price: 1300 },
-                    { name: "ホットコーヒー（スリーブ付）", price: 550 },
-                    { name: "アイスカフェラテ", price: 600 }
+                    { name: "型抜き黒魔道士クッキー", price: 900 },
+                    { name: "アイシングクッキー「黒魔紋」", price: 650 },
+                    { name: "禁断のマテリアのかけら琥珀糖", price: 1500 },
+                    { name: "ハニー・B・ラブリーのハチミツレモンゼリー", price: 1000 }
                 ]
             }
         ];
@@ -1243,7 +1254,7 @@
                 });
         }
         fetchMakuhariWeather();
-        setInterval(fetchMakuhariWeather, 30 * 60 * 1000);
+        setInterval(fetchMakuhariWeather, 60 * 60 * 1000);
 
         // URL共有データの復元
         function loadFromURL() {
@@ -1271,7 +1282,7 @@
         let inventory = JSON.parse(localStorage.getItem('ff_all_inv')) || {};
         let fieldActivityStatus = JSON.parse(localStorage.getItem('ff_all_fieldact')) || {};
         let favorites = JSON.parse(localStorage.getItem('ff_all_favs')) || {};
-        let cafeOrders = JSON.parse(localStorage.getItem('ff_all_cafe')) || {}; // カフェ注文データ
+        let cafeOrders = JSON.parse(localStorage.getItem('ff_all_cafe')) || {};
 
         let activeCategoryId = goodsCategories[0]?.id || "";
         let currentModalGroupId = 'all';
@@ -1329,7 +1340,7 @@
                     statusClass = "ongoing";
                 }
 
-                const timeStr = item.endTime ? `${item.time} - ${item.endTime}` : item.time;
+                const timeStr = item.endTime ? `${item.time} 〜 ${item.endTime}` : item.time;
 
                 return `
                     <div class="timeline-event-card ${statusClass}"
@@ -1381,7 +1392,6 @@
             let storeTotal = 0;
             let grandTotal = 0;
 
-            // 各店舗の集計
             cafeStores.forEach((store, sIdx) => {
                 store.menu.forEach(item => {
                     const key = `${store.id}_${item.name}`;
@@ -1397,7 +1407,6 @@
             document.getElementById('cafeStoreTotal').textContent = `¥${storeTotal.toLocaleString()}`;
             document.getElementById('cafeGrandTotal').textContent = `¥${grandTotal.toLocaleString()}`;
 
-            // メニューリスト描画
             const listContainer = document.getElementById('cafeMenuListContainer');
             listContainer.innerHTML = currentStore.menu.map(item => {
                 const key = `${currentStore.id}_${item.name}`;
