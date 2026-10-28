@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Event Quest Log</title>
+    <style>
+        :root {
+            /* 抽出カラーパレット */
+            --c-espresso: #4A2718;
+            --c-deep-wine: #592219;
+            --c-terracotta: #7A4E47;
+            --c-rose-taupe: #CDB0A1;
+            --c-camel: #B98E61;
+            --c-warm-sand: #C7B89C;
+            --c-ecru-light: #DDDDCF;
+            --c-beige-soft: #DBCEC3;
+
+            /* UI変数 */
+            --bg: #F8F6F3;
+            --card-bg: #FFFFFF;
+            --text-main: var(--c-espresso);
+            --text-muted: #7E7068;
+            --border: var(--c-beige-soft);
+            --primary: var(--c-terracotta);
+            --primary-hover: var(--c-deep-wine);
+            --accent: var(--c-camel);
+            --accent-subtle: #F3EFEA;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --shadow-soft: 0 4px 16px rgba(74, 39, 24, 0.06);
+            --shadow-float: 0 6px 20px rgba(89, 34, 25, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding-top: max(12px, env(safe-area-inset-top));
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ヘッダー */
+        .app-header {
+            background: linear-gradient(135deg, var(--c-espresso) 0%, var(--c-deep-wine) 100%);
+            border-radius: var(--radius-lg);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-float);
+            color: #FFFFFF;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-info { display: flex; flex-direction: column; gap: 2px; }
+        .app-title { font-size: 1.15rem; font-weight: 700; margin: 0; letter-spacing: 0.04em; }
+        .app-subtitle { font-size: 0.7rem; color: var(--c-rose-taupe); margin: 0; }
+
+        .header-badges {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .weather-badge {
+            font-size: 0.68rem;
+            color: #FFFFFF;
+            background: rgba(255, 255, 255, 0.18);
+            padding: 2px 7px;
+            border-radius: 12px;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: ui-monospace, monospace;
+        }
+
+        .live-clock {
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(6px);
+            padding: 3px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 画面タブ（SPAビュー） */
+        .tab-view {
+            display: none;
+            animation: fadeIn 0.18s ease-in-out;
+        }
+
+        .tab-view.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* セクション共通カード */
+        .section-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            color: var(--c-espresso);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.02em;
+        }
+
+        .section-subtext {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin: -8px 0 10px 0;
+            line-height: 1.4;
+        }
+
+        /* 次の予定カード */
+        .next-event-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--c-camel);
+            border-radius: var(--radius-lg);
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .next-event-card.urgent {
+            border-left: 4px solid var(--c-terracotta);
+            background: #FCFAF8;
+        }
+
+        .next-event-left { display: flex; flex-direction: column; gap: 3px; }
+        .next-badge { font-size: 0.65rem; font-weight: 700; color: var(--c-camel); text-transform: uppercase; letter-spacing: 0.06em; }
+        .next-event-name { font-size: 0.88rem; font-weight: 700; color: var(--c-espresso); }
+        .next-event-time { font-size: 0.88rem; font-weight: 700; color: var(--c-terracotta); font-family: ui-monospace, monospace; }
+
+        /* ==================== タイムライン ==================== */
+        .schedule-tab-bar, .sub-tab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+            background: var(--accent-subtle);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .schedule-tab-btn, .sub-tab-btn {
+            flex: 1;
+            padding: 9px 6px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.15s;
+        }
+
+        .schedule-tab-btn.active, .sub-tab-btn.active {
+            background: #FFFFFF;
+            color: var(--c-espresso);
+            box-shadow: 0 2px 6px rgba(74, 39, 24, 0.08);
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            margin-top: 10px;
+            padding-left: 46px;
+        }
+
+        .time-axis-line {
+            position: absolute;
+            left: 44px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--border);
+        }
+
+        .hour-row {
+            height: 60px;
+            position: relative;
+            border-top: 1px dashed #EDE7E1;
+        }
+
+        .hour-row:first-child { border-top: 1px solid var(--border); }
+
+        .hour-label {
+            position: absolute;
+            left: -46px;
+            top: -9px;
+            width: 38px;
+            font-size: 0.72rem;
+            font-family: ui-monospace, monospace;
+            color: var(--text-muted);
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .timeline-events-container {
+            position: absolute;
+            top: 0;
+            left: 52px;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .timeline-event-card {
+            position: absolute;
+            left: 0;
+            right: 0;
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-left: 3.5px solid var(--c-terracotta);
+            border-radius: 8px;
+            padding: 6px 10px;
+            box-shadow: 0 2px 6px rgba(74, 39, 24, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-event-card.ongoing {
+            border-left: 4px solid var(--c-camel);
+            background: #FDFBF8;
+            box-shadow: 0 2px 10px rgba(185, 142, 97, 0.25);
+        }
+
+        .timeline-event-card.ongoing .tl-time-badge {
+            background: var(--c-camel);
+            color: #FFFFFF;
+        }
+
+        .timeline-event-card.past {
+            background: #F4EFEB;
+            border-color: #E5DDD5;
+            border-left: 3.5px solid var(--c-warm-sand);
+            opacity: 0.65;
+        }
+
+        .timeline-event-card.past .tl-name {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .tl-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tl-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--c-espresso);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tl-time-badge {
+            font-size: 0.68rem;
+            font-family: ui-monospace, monospace;
+            color: var(--c-terracotta);
+            font-weight: 600;
+            width: fit-content;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .now-indicator-line {
+            position: absolute;
+            left: -46px;
+            right: 0;
+            height: 2px;
+            background: var(--c-deep-wine);
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+        }
+
+        .now-indicator-line::before {
+            content: "NOW";
+            position: absolute;
+            left: 0;
+            top: -8px;
+            background: var(--c-deep-wine);
+            color: #FFFFFF;
+            font-size: 0.58rem;
+            font-weight: 800;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: ui-monospace, monospace;
+        }
+
+        .now-indicator-line::after {
+            content: "";
+            position: absolute;
+            left: 44px;
+            top: -4px;
+            width: 10px;
+            height: 10px;
+            background: var(--c-deep-wine);
+            border-radius: 50%;
+        }
+
+        .activity-checklist-box {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .act-check-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 8px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.86rem;
+            transition: background 0.15s;
+        }
+
+        .act-check-item:active { background: var(--accent-subtle); }
+
+        .act-check-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .act-check-item input[type="checkbox"] {
+            width: 19px;
+            height: 19px;
+            accent-color: var(--c-terracotta);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .act-check-item.completed span {
+            text-decoration: line-through;
+            color: #A3968F;
+        }
+
+        /* グッズ種別タブ */
+        .category-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .category-tabs::-webkit-scrollbar { display: none; }
+
+        .tab-chip {
+            white-space: nowrap;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: #FFFFFF;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+
+        .tab-chip.active {
+            background: var(--c-terracotta);
+            color: #FFFFFF;
+            border-color: var(--c-terracotta);
+            box-shadow: 0 3px 10px rgba(122, 78, 71, 0.25);
+        }
+
+        .tab-count { font-size: 0.72rem; opacity: 0.85; font-family: ui-monospace, monospace; }
+
+        /* グッズリスト */
+        .goods-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 4px;
+            border-bottom: 1px solid #F1ECE6;
+        }
+
+        .goods-item:last-child { border-bottom: none; }
+
+        .goods-info { display: flex; align-items: center; gap: 10px; flex: 1; }
+
+        .btn-fav {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0;
+            color: var(--c-beige-soft);
+            transition: transform 0.15s, color 0.15s;
+            line-height: 1;
+        }
+
+        .btn-fav.active { color: var(--c-terracotta); transform: scale(1.1); }
+
+        .goods-name-wrap { display: flex; flex-direction: column; gap: 2px; }
+        .goods-name { font-size: 0.9rem; font-weight: 600; color: var(--c-espresso); }
+        .goods-name.is-fav { color: var(--c-deep-wine); font-weight: 700; }
+
+        .status-tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 6px;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .tag-want { background: #F8ECE8; color: var(--c-deep-wine); }
+        .tag-trade { background: #F7EFE4; color: var(--c-camel); }
+        .tag-owned { background: #EFF4EB; color: #4B633C; }
+
+        .goods-controls { display: flex; align-items: center; gap: 6px; }
+
+        .btn-ctrl {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #FFFFFF;
+            font-size: 1.15rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--c-espresso);
+            transition: transform 0.1s;
+        }
+
+        .btn-ctrl:active { transform: scale(0.92); background: var(--accent-subtle); }
+
+        .btn-ctrl.plus {
+            background: var(--c-terracotta);
+            color: #FFFFFF;
+            border-color: var(--c-terracotta);
+        }
+
+        .count-value {
+            min-width: 26px;
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-family: ui-monospace, monospace;
+            color: var(--c-espresso);
+        }
+
+        /* ==================== カフェ・フード計算スタイル ==================== */
+        .cafe-total-box {
+            background: #FDFBF8;
+            border: 1.5px solid var(--border);
+            border-left: 4px solid var(--c-camel);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cafe-total-label {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .cafe-total-amount {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--c-espresso);
+            font-family: ui-monospace, monospace;
+        }
+
+        .cafe-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 4px;
+            border-bottom: 1px solid #F1ECE6;
+        }
+
+        .cafe-item-row:last-child { border-bottom: none; }
+
+        .cafe-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .cafe-item-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--c-espresso);
+        }
+
+        .cafe-item-price {
+            font-size: 0.74rem;
+            color: var(--c-terracotta);
+            font-weight: 700;
+            font-family: ui-monospace, monospace;
+        }
+
+        /* アクションボタングリッド */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .btn-app {
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: var(--c-espresso);
+        }
+
+        .btn-app:active { transform: scale(0.98); }
+
+        .btn-app.primary {
+            background: linear-gradient(135deg, var(--c-terracotta) 0%, var(--c-deep-wine) 100%);
+            color: #FFFFFF;
+            border: none;
+            grid-column: span 2;
+            box-shadow: 0 4px 12px rgba(89, 34, 25, 0.2);
+        }
+
+        .btn-app.all-sum {
+            background: var(--accent-subtle);
+            color: var(--c-terracotta);
+            border-color: var(--c-rose-taupe);
+            grid-column: span 2;
+        }
+
+        .btn-app.danger { color: #8F3B30; }
+
+        /* 会場マップ */
+        .map-container {
+            border: 1.5px dashed var(--c-warm-sand);
+            border-radius: var(--radius-md);
+            background: #FAF8F5;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .map-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .map-placeholder-text {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            line-height: 1.6;
+        }
+
+        .map-placeholder-icon {
+            font-size: 2rem;
+            margin-bottom: 6px;
+            color: var(--c-camel);
+        }
+
+        /* ローカルメモ欄 */
+        .memo-box {
+            background: #FAF8F5;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+        }
+
+        .memo-textarea {
+            width: 100%;
+            min-height: 90px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            font-size: 0.84rem;
+            line-height: 1.5;
+            background: #FFFFFF;
+            color: var(--text-main);
+            outline: none;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .memo-textarea:focus { border-color: var(--c-camel); }
+
+        .memo-notice {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* リンク集 */
+        .links-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .link-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            text-decoration: none;
+            color: var(--c-espresso);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .link-card:active { background: var(--accent-subtle); transform: scale(0.97); }
+        .link-title { font-size: 0.82rem; font-weight: 700; }
+        .link-desc { font-size: 0.68rem; color: var(--text-muted); }
+
+        /* ボトムナビゲーションバー（4タブ対応） */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding-top: 6px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+            z-index: 1000;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #8C8078;
+            transition: all 0.2s ease;
+            padding: 4px 0;
+            position: relative;
+        }
+
+        .nav-icon {
+            font-size: 1.25rem;
+            line-height: 1;
+            transition: transform 0.15s;
+        }
+
+        .nav-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .nav-item.active { color: var(--c-espresso); }
+        .nav-item.active .nav-icon { transform: scale(1.12); }
+        .nav-item.active::before {
+            content: "";
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 3px;
+            background: var(--c-terracotta);
+            border-radius: 3px;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(74, 39, 24, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: #FFFFFF;
+            width: 100%;
+            max-width: 420px;
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+            box-shadow: var(--shadow-float);
+        }
+
+        .modal-header { font-size: 0.96rem; font-weight: 700; margin-bottom: 10px; color: var(--c-espresso); }
+
+        .tab-mode-group {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 10px;
+            background: var(--accent-subtle);
+            padding: 3px;
+            border-radius: 8px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 7px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .mode-btn.active {
+            background: #FFFFFF;
+            color: var(--c-espresso);
+            box-shadow: 0 2px 4px rgba(74, 39, 24, 0.08);
+        }
+
+        .preview-textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 180px;
+            background: #FDFBF8;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            margin-bottom: 12px;
+            color: var(--c-espresso);
+        }
+
+        .modal-footer { display: flex; gap: 8px; }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-modal.cancel { background: #EDE7E1; color: var(--c-espresso); }
+        .btn-modal.copy { background: var(--c-terracotta); color: #FFFFFF; flex: 2; }
+
+        /* 画像拡大ビューア */
+        .lightbox-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .lightbox-modal.active { display: flex; }
+        .lightbox-img { max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 6px; }
+        .lightbox-close { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 1.8rem; background: none; border: none; cursor: pointer; }
+
+        /* トースト通知 */
+        .toast {
+            position: fixed;
+            bottom: calc(85px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--c-espresso);
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2000;
+            box-shadow: 0 4px 14px rgba(74, 39, 24, 0.2);
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ヘッダー -->
+    <header class="app-header">
+        <div class="header-info">
+            <h1 class="app-title">Quest Log</h1>
+            <p class="app-subtitle">10.31 / 11.01 Event Memo</p>
+        </div>
+        <div class="header-badges">
+            <div class="weather-badge" id="weatherDisplay">🌤️ 幕張 --℃</div>
+            <div class="live-clock" id="clockDisplay">00:00:00</div>
+        </div>
+    </header>
+
+    <!-- 次の予定カード -->
+    <div class="next-event-card" id="nextEventCard">
+        <div class="next-event-left">
+            <span class="next-badge">NEXT SCHEDULE</span>
+            <span class="next-event-name" id="nextEventName">確認中...</span>
+        </div>
+        <div class="next-event-time" id="nextEventCountdown">--:--</div>
+    </div>
+
+    <!-- ==================== TAB 1: グッズ (メイン) ==================== -->
+    <div id="view-goods" class="tab-view active">
+        <section class="section-card">
+            <h2 class="section-title">🎁 グッズ & 戦利品</h2>
+
+            <div class="category-tabs" id="categoryTabs"></div>
+
+            <div id="activeGoodsList"></div>
+
+            <div class="action-grid">
+                <button class="btn-app primary" onclick="openCurrentGroupModal()">サマリ・募集文をコピー</button>
+                <button class="btn-app all-sum" onclick="openSummaryModal('all')">全グッズ一括サマリ</button>
+                <button class="btn-app" onclick="shareViaURL()">URLで共有</button>
+                <button class="btn-app danger" onclick="resetAll()">全データ消去</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================== TAB 2: スケジュール ==================== -->
+    <div id="view-schedule" class="tab-view">
+        <section class="section-card">
+            <h2 class="section-title">📅 ステージタイムテーブル</h2>
+
+            <div class="schedule-tab-bar">
+                <button class="schedule-tab-btn active" id="schedBtn-day1" onclick="switchScheduleDay(0)">1日目 (10/31 土)</button>
+                <button class="schedule-tab-btn" id="schedBtn-day2" onclick="switchScheduleDay(1)">2日目 (11/01 日)</button>
+            </div>
+
+            <div class="timeline-wrapper" id="timelineWrapper">
+                <div class="time-axis-line"></div>
+                <div id="timelineHoursContainer"></div>
+                <div class="timeline-events-container" id="timelineEventsContainer"></div>
+                <div class="now-indicator-line" id="nowIndicator"></div>
+            </div>
+
+            <div class="activity-checklist-box">
+                <h3 style="font-size: 0.88rem; font-weight: 700; color: var(--c-espresso); margin: 0 0 8px 0;">🎯 会場アクティビティ体験メモ</h3>
+                <div id="fieldActivityContainer"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================== TAB 3: カフェ・フード計算 ==================== -->
+    <div id="view-cafe" class="tab-view">
+        <section class="section-card">
+            <h2 class="section-title">☕ カフェ & フード計算</h2>
+            <p class="section-subtext">数量を選ぶだけで合計金額を自動計算・注文用サマリが作れます。</p>
+
+            <!-- 2店舗切り替えサブタブ -->
+            <div class="sub-tab-bar">
+                <button class="sub-tab-btn active" id="cafeTabBtn-0" onclick="switchCafeStore(0)">店舗A (エオカフェ)</button>
+                <button class="sub-tab-btn" id="cafeTabBtn-1" onclick="switchCafeStore(1)">店舗B (キッチンカー)</button>
+            </div>
+
+            <!-- 金額サマリバー -->
+            <div class="cafe-total-box">
+                <div>
+                    <div class="cafe-total-label" id="cafeStoreTotalLabel">店舗Aの合計</div>
+                    <div class="cafe-total-amount" id="cafeStoreTotal">¥0</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="cafe-total-label">2店舗 総合計</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--c-terracotta);" id="cafeGrandTotal">¥0</div>
+                </div>
+            </div>
+
+            <!-- メニュー一覧 -->
+            <div id="cafeMenuListContainer"></div>
+
+            <div class="action-grid" style="margin-top: 16px;">
+                <button class="btn-app primary" onclick="copyCafeOrderSummary()">📋 注文サマリをコピー</button>
+                <button class="btn-app danger" onclick="resetCafeOrders()">カフェ注文をクリア</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================== TAB 4: ガイド・MAP・メモ ==================== -->
+    <div id="view-guide" class="tab-view">
+        <!-- 会場MAP -->
+        <section class="section-card">
+            <h2 class="section-title">🗺️ 会場MAP</h2>
+            <div class="map-container" onclick="openMapLightbox()">
+                <img src="map.png" id="eventMapImage" class="map-img" alt="会場MAP" onload="this.style.display='block'; document.getElementById('mapPlaceholder').style.display='none';">
+                <div id="mapPlaceholder">
+                    <div class="map-placeholder-icon">🗺️</div>
+                    <div class="map-placeholder-text">
+                        <strong>MAP画像置き場</strong><br>
+                        同じフォルダに「map.png」を置くと<br>自動でここに表示されます（タップで拡大）
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 個人用ローカルメモ -->
+        <section class="section-card">
+            <h2 class="section-title">📝 個人用メモ（この端末専用）</h2>
+            <p class="section-subtext">※このスマホ内だけに保存されます。他の人の画面と同期されることはありません。</p>
+            <div class="memo-box">
+                <textarea id="quickMemo" class="memo-textarea" placeholder="コインロッカー番号、集合ゲート、個人的な覚書など（自動保存されます）" oninput="saveMemo()"></textarea>
+                <div class="memo-notice">🔒 このメモはあなたの端末だけに保存されています</div>
+            </div>
+        </section>
+
+        <!-- リンク集 -->
+        <section class="section-card">
+            <h2 class="section-title">🔗 リンク集・現況</h2>
+            <div class="links-grid">
+                <a href="https://fanfest.finalfantasyxiv.com/2026/jp/" target="_blank" class="link-card">
+                    <span class="link-title">🌐 特設サイト</span>
+                    <span class="link-desc">公式案内</span>
+                </a>
+                <a href="https://twitter.com/search?q=%E7%89%A9%E8%B2%A9%20%E5%AE%8C%E5%A3%B2&f=live" target="_blank" class="link-card">
+                    <span class="link-title">⚡ 完売情報 (X)</span>
+                    <span class="link-desc">リアルタイム検索</span>
+                </a>
+                <a href="https://twitter.com/FF_XIV_JP" target="_blank" class="link-card">
+                    <span class="link-title">📣 FF14公式X</span>
+                    <span class="link-desc">公式アナウンス</span>
+                </a>
+                <a href="https://transit.yahoo.co.jp/" target="_blank" class="link-card">
+                    <span class="link-title">🚃 乗換案内</span>
+                    <span class="link-desc">運行情報</span>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- ボトムナビゲーション（4タブ） -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchMainTab('goods')">
+            <span class="nav-icon">🎁</span>
+            <span class="nav-label">グッズ</span>
+        </button>
+        <button class="nav-item" onclick="switchMainTab('schedule')">
+            <span class="nav-icon">📅</span>
+            <span class="nav-label">予定</span>
+        </button>
+        <button class="nav-item" onclick="switchMainTab('cafe')">
+            <span class="nav-icon">☕</span>
+            <span class="nav-label">カフェ</span>
+        </button>
+        <button class="nav-item" onclick="switchMainTab('guide')">
+            <span class="nav-icon">🗺️</span>
+            <span class="nav-label">ガイド</span>
+        </button>
+    </nav>
+
+    <!-- サマリモーダル -->
+    <div id="summaryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">サマリ出力</div>
+            
+            <div class="tab-mode-group">
+                <button class="mode-btn active" id="mode-all" onclick="changeSummaryMode('all')">すべて</button>
+                <button class="mode-btn" id="mode-owned" onclick="changeSummaryMode('owned')">所持のみ</button>
+                <button class="mode-btn" id="mode-trade" onclick="changeSummaryMode('trade')">トレード募集</button>
+            </div>
+
+            <textarea class="preview-textarea" id="previewText" placeholder="内容を確認・追記できます"></textarea>
+            
+            <div class="modal-footer">
+                <button class="btn-modal cancel" onclick="closeModal()">閉じる</button>
+                <button class="btn-modal copy" onclick="executeCopy()">コピーする</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAPライトボックス -->
+    <div id="mapLightbox" class="lightbox-modal" onclick="closeMapLightbox()">
+        <button class="lightbox-close">✕</button>
+        <img id="lightboxImg" class="lightbox-img" src="map.png" alt="拡大MAP">
+    </div>
+
+    <!-- トースト通知 -->
+    <div class="toast" id="toastMsg">通知</div>
+
+    <script>
+        // ==========================================
+        //  設定エリア
+        // ==========================================
+        const thisYear = new Date().getFullYear();
+
+        const TIMELINE_START_HOUR = 10;
+        const TIMELINE_END_HOUR = 21;
+        const PX_PER_MINUTE = 1.05;
+
+        // ステージタイムスケジュール
+        const stageSchedule = [
+            {
+                day: "1日目 (10/31 土曜)",
+                date: `${thisYear}-10-31`,
+                list: [
+                    { name: "基調講演", time: "11:00", endTime: "13:00" },
+                    { name: "クリコン セミファイナル", time: "15:00", endTime: "16:30" },
+                    { name: "吉田Pの一問一答タイムアタック！", time: "16:30", endTime: "17:00" },
+                    { name: "クリコン ファイナル", time: "17:00", endTime: "18:30" },
+                    { name: "ピアノコンサート", time: "19:30", endTime: "20:30" }
+                ]
+            },
+            {
+                day: "2日目 (11/01 日曜)",
+                date: `${thisYear}-11-01`,
+                list: [
+                    { name: "開発パネル", time: "10:30", endTime: "12:00" },
+                    { name: "LIVE Q&A", time: "12:30", endTime: "13:30" },
+                    { name: "ミラプリコレクション", time: "13:50", endTime: "15:00" },
+                    { name: "直樹の部屋", time: "15:30", endTime: "17:30" },
+                    { name: "スペシャルライブ - THE PRIMALS", time: "19:00", endTime: "20:30" }
+                ]
+            }
+        ];
+
+        // 会場内アクティビティ
+        const fieldActivities = [
+            "ルーレットミニゲーム体験",
+            "ファンフェス特設展示見学",
+            "フォトスポット撮影",
+            "オフィシャルグッズ物販受取",
+            "協賛・出展ブース巡り",
+            "メッセージボード記入"
+        ];
+
+        // グッズリスト
+        const goodsCategories = [
+            {
+                id: "coaster",
+                category: "コースター",
+                items: ["サンクレッド", "ヤシュトラ", "アリゼー", "ウリエンジェ", "エスティニアン", "グラハ・ティア"]
+            },
+            {
+                id: "can_badge",
+                category: "缶バッジ",
+                items: ["アルフィノ", "アリゼー", "タタル", "クルル", "エメトセルク", "ヒュトロダエウス"]
+            },
+            {
+                id: "acrylic",
+                category: "アクリルスタンド",
+                items: ["ゼノス", "ヴェーネス", "ヘルメス", "ハイデリン", "ゾディアーク"]
+            },
+            {
+                id: "sticker",
+                category: "ステッカー",
+                items: ["チョコボ", "モーグリ", "ナマズオ", "ファットキャット"]
+            }
+        ];
+
+        // カフェ・フード店舗メニュー（2店舗ぶんの雛形：ここを自由に書き換えられます）
+        const cafeStores = [
+            {
+                id: "store_a",
+                name: "店舗A (エオカフェ出張店)",
+                menu: [
+                    { name: "デブチョコボまん", price: 650 },
+                    { name: "騎士団のレーション（カレー）", price: 1200 },
+                    { name: "モーグリのふわふわパンケーキ", price: 950 },
+                    { name: "青魔道士のブルードリンク", price: 750 },
+                    { name: "赤魔道士のベリーソーダ", price: 750 }
+                ]
+            },
+            {
+                id: "store_b",
+                name: "店舗B (コラボキッチンカー)",
+                menu: [
+                    { name: "タタル特製ポテトフライ", price: 600 },
+                    { name: "クリスタリウムサンドイッチ", price: 1100 },
+                    { name: "オメガの漆黒唐揚げ丼", price: 1300 },
+                    { name: "ホットコーヒー（スリーブ付）", price: 550 },
+                    { name: "アイスカフェラテ", price: 600 }
+                ]
+            }
+        ];
+        // ==========================================
+
+        function triggerHaptic() {
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toastMsg');
+            toast.textContent = text;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function switchMainTab(tabName) {
+            triggerHaptic();
+            ['goods', 'schedule', 'cafe', 'guide'].forEach(name => {
+                document.getElementById(`view-${name}`).classList.toggle('active', name === tabName);
+            });
+
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach((btn, idx) => {
+                const target = ['goods', 'schedule', 'cafe', 'guide'][idx];
+                btn.classList.toggle('active', target === tabName);
+            });
+
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+
+        let selectedScheduleDayIndex = 0;
+
+        function switchScheduleDay(dayIndex) {
+            triggerHaptic();
+            selectedScheduleDayIndex = dayIndex;
+            document.getElementById('schedBtn-day1').classList.toggle('active', dayIndex === 0);
+            document.getElementById('schedBtn-day2').classList.toggle('active', dayIndex === 1);
+            renderTimeline();
+        }
+
+        let selectedCafeStoreIndex = 0;
+
+        function switchCafeStore(storeIndex) {
+            triggerHaptic();
+            selectedCafeStoreIndex = storeIndex;
+            document.getElementById('cafeTabBtn-0').classList.toggle('active', storeIndex === 0);
+            document.getElementById('cafeTabBtn-1').classList.toggle('active', storeIndex === 1);
+            renderCafe();
+        }
+
+        // 幕張メッセの天気取得
+        function fetchMakuhariWeather() {
+            const lat = 35.648;
+            const lon = 140.035;
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=Asia%2FTokyo`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.current) {
+                        const temp = Math.round(data.current.temperature_2m * 10) / 10;
+                        const code = data.current.weather_code;
+                        let weatherIcon = "🌤️";
+                        if (code === 0) weatherIcon = "☀️";
+                        else if (code >= 1 && code <= 3) weatherIcon = "⛅";
+                        else if (code >= 51 && code <= 67) weatherIcon = "🌧️";
+                        else if (code >= 95) weatherIcon = "⛈️";
+
+                        document.getElementById('weatherDisplay').textContent = `${weatherIcon} 幕張 ${temp}℃`;
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('weatherDisplay').textContent = `🌤️ 幕張メッセ`;
+                });
+        }
+        fetchMakuhariWeather();
+        setInterval(fetchMakuhariWeather, 30 * 60 * 1000);
+
+        // URL共有データの復元
+        function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const dataStr = params.get('data');
+            if (dataStr) {
+                try {
+                    const decoded = JSON.parse(decodeURIComponent(escape(atob(dataStr))));
+                    if (confirm("共有URLから記録データを復元しますか？")) {
+                        localStorage.setItem('ff_all_inv', JSON.stringify(decoded.inv || {}));
+                        localStorage.setItem('ff_all_fieldact', JSON.stringify(decoded.fieldact || {}));
+                        localStorage.setItem('ff_all_favs', JSON.stringify(decoded.favs || {}));
+                        localStorage.setItem('ff_all_cafe', JSON.stringify(decoded.cafe || {}));
+                        localStorage.setItem('ff_all_memo', decoded.memo || "");
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        showToast("復元しました");
+                    }
+                } catch (e) {
+                    console.error("URL解析エラー", e);
+                }
+            }
+        }
+        loadFromURL();
+
+        let inventory = JSON.parse(localStorage.getItem('ff_all_inv')) || {};
+        let fieldActivityStatus = JSON.parse(localStorage.getItem('ff_all_fieldact')) || {};
+        let favorites = JSON.parse(localStorage.getItem('ff_all_favs')) || {};
+        let cafeOrders = JSON.parse(localStorage.getItem('ff_all_cafe')) || {}; // カフェ注文データ
+
+        let activeCategoryId = goodsCategories[0]?.id || "";
+        let currentModalGroupId = 'all';
+        let currentMode = 'all';
+
+        function saveMemo() {
+            const val = document.getElementById('quickMemo').value;
+            localStorage.setItem('ff_all_memo', val);
+        }
+
+        function timeToMinutes(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        // カレンダータイムライン描画
+        function renderTimeline() {
+            const now = new Date();
+            const sched = stageSchedule[selectedScheduleDayIndex];
+            const hoursContainer = document.getElementById('timelineHoursContainer');
+            const eventsContainer = document.getElementById('timelineEventsContainer');
+
+            let hoursHtml = "";
+            for (let h = TIMELINE_START_HOUR; h <= TIMELINE_END_HOUR; h++) {
+                const timeLabel = `${String(h).padStart(2, '0')}:00`;
+                hoursHtml += `
+                    <div class="hour-row" style="height: ${60 * PX_PER_MINUTE}px;">
+                        <span class="hour-label">${timeLabel}</span>
+                    </div>
+                `;
+            }
+            hoursContainer.innerHTML = hoursHtml;
+
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${y}-${m}-${d}`;
+            const isToday = (todayStr === sched.date);
+            const isPastDay = (new Date(`${todayStr}T00:00:00`) > new Date(`${sched.date}T00:00:00`));
+
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const baseMinutes = TIMELINE_START_HOUR * 60;
+
+            eventsContainer.innerHTML = sched.list.map(item => {
+                const startMin = timeToMinutes(item.time);
+                const endMin = item.endTime ? timeToMinutes(item.endTime) : (startMin + 60);
+
+                const topPx = Math.max(0, (startMin - baseMinutes) * PX_PER_MINUTE);
+                const heightPx = Math.max(38, (endMin - startMin) * PX_PER_MINUTE - 4);
+
+                let statusClass = "";
+                if (isPastDay || (isToday && currentMinutes >= endMin)) {
+                    statusClass = "past";
+                } else if (isToday && currentMinutes >= startMin && currentMinutes < endMin) {
+                    statusClass = "ongoing";
+                }
+
+                const timeStr = item.endTime ? `${item.time} - ${item.endTime}` : item.time;
+
+                return `
+                    <div class="timeline-event-card ${statusClass}"
+                         style="top: ${topPx}px; height: ${heightPx}px;">
+                        <div class="tl-info">
+                            <span class="tl-name">${item.name}</span>
+                            <span class="tl-time-badge">${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateNowIndicator();
+        }
+
+        // 現在時刻NOWバー
+        function updateNowIndicator() {
+            const now = new Date();
+            const sched = stageSchedule[selectedScheduleDayIndex];
+            const nowIndicator = document.getElementById('nowIndicator');
+
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${y}-${m}-${d}`;
+
+            if (todayStr === sched.date) {
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const baseMinutes = TIMELINE_START_HOUR * 60;
+                const endMinutes = (TIMELINE_END_HOUR + 1) * 60;
+
+                if (currentMinutes >= baseMinutes && currentMinutes <= endMinutes) {
+                    const topPx = (currentMinutes - baseMinutes) * PX_PER_MINUTE;
+                    nowIndicator.style.top = `${topPx}px`;
+                    nowIndicator.style.display = 'block';
+                    return;
+                }
+            }
+            nowIndicator.style.display = 'none';
+        }
+
+        // カフェ・フード描画＆計算
+        function renderCafe() {
+            const currentStore = cafeStores[selectedCafeStoreIndex];
+            document.getElementById('cafeTabBtn-0').textContent = cafeStores[0].name;
+            document.getElementById('cafeTabBtn-1').textContent = cafeStores[1].name;
+            document.getElementById('cafeStoreTotalLabel').textContent = `${currentStore.name}の小計`;
+
+            let storeTotal = 0;
+            let grandTotal = 0;
+
+            // 各店舗の集計
+            cafeStores.forEach((store, sIdx) => {
+                store.menu.forEach(item => {
+                    const key = `${store.id}_${item.name}`;
+                    const count = cafeOrders[key] || 0;
+                    const sub = count * item.price;
+                    grandTotal += sub;
+                    if (sIdx === selectedCafeStoreIndex) {
+                        storeTotal += sub;
+                    }
+                });
+            });
+
+            document.getElementById('cafeStoreTotal').textContent = `¥${storeTotal.toLocaleString()}`;
+            document.getElementById('cafeGrandTotal').textContent = `¥${grandTotal.toLocaleString()}`;
+
+            // メニューリスト描画
+            const listContainer = document.getElementById('cafeMenuListContainer');
+            listContainer.innerHTML = currentStore.menu.map(item => {
+                const key = `${currentStore.id}_${item.name}`;
+                const count = cafeOrders[key] || 0;
+                return `
+                    <div class="cafe-item-row">
+                        <div class="cafe-item-info">
+                            <span class="cafe-item-name">${item.name}</span>
+                            <span class="cafe-item-price">¥${item.price.toLocaleString()}</span>
+                        </div>
+                        <div class="goods-controls">
+                            <button class="btn-ctrl" onclick="changeCafeOrder('${key}', -1)">−</button>
+                            <span class="count-value">${count}</span>
+                            <button class="btn-ctrl plus" onclick="changeCafeOrder('${key}', 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            localStorage.setItem('ff_all_cafe', JSON.stringify(cafeOrders));
+        }
+
+        function changeCafeOrder(key, delta) {
+            triggerHaptic();
+            const current = cafeOrders[key] || 0;
+            cafeOrders[key] = Math.max(0, current + delta);
+            renderCafe();
+        }
+
+        function resetCafeOrders() {
+            if (confirm("カフェ・フードの注文カウントをすべてリセットしますか？")) {
+                cafeOrders = {};
+                renderCafe();
+                showToast("注文をクリアしました");
+            }
+        }
+
+        function copyCafeOrderSummary() {
+            triggerHaptic();
+            let text = "【カフェ・フード注文サマリ】\n";
+            let grandTotal = 0;
+
+            cafeStores.forEach(store => {
+                let storeItems = [];
+                let storeSubtotal = 0;
+
+                store.menu.forEach(item => {
+                    const key = `${store.id}_${item.name}`;
+                    const count = cafeOrders[key] || 0;
+                    if (count > 0) {
+                        const sum = count * item.price;
+                        storeItems.push(`・${item.name} × ${count} (¥${sum.toLocaleString()})`);
+                        storeSubtotal += sum;
+                        grandTotal += sum;
+                    }
+                });
+
+                if (storeItems.length > 0) {
+                    text += `\n■ ${store.name} [小計: ¥${storeSubtotal.toLocaleString()}]\n`;
+                    text += storeItems.join('\n') + '\n';
+                }
+            });
+
+            if (grandTotal === 0) {
+                showToast("メニューが選択されていません");
+                return;
+            }
+
+            text += `\n━━━━━━━━━━\n合計金額：¥${grandTotal.toLocaleString()}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("注文サマリをコピーしました！");
+            }).catch(() => {
+                prompt("以下のサマリをコピーしてください：", text);
+            });
+        }
+
+        function tick() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clockDisplay').textContent = `${h}:${m}:${s}`;
+
+            updateNextEvent(now);
+            updateNowIndicator();
+        }
+        setInterval(tick, 1000);
+
+        function updateNextEvent(now) {
+            let upcoming = null;
+            let minDiffMs = Infinity;
+
+            stageSchedule.forEach(sched => {
+                sched.list.forEach(item => {
+                    const targetTime = new Date(`${sched.date}T${item.time}:00`);
+                    const diffMs = targetTime - now;
+
+                    if (diffMs >= 0 && diffMs < minDiffMs) {
+                        minDiffMs = diffMs;
+                        upcoming = {
+                            ...item,
+                            dayLabel: sched.day,
+                            diffMinutes: Math.floor(diffMs / 60000),
+                            diffHours: Math.floor(diffMs / 3600000),
+                            diffDays: Math.floor(diffMs / 86400000)
+                        };
+                    }
+                });
+            });
+
+            const card = document.getElementById('nextEventCard');
+            const nameElem = document.getElementById('nextEventName');
+            const countdownElem = document.getElementById('nextEventCountdown');
+
+            if (upcoming) {
+                nameElem.textContent = `${upcoming.name} (${upcoming.time}〜)`;
+                if (upcoming.diffMinutes === 0) {
+                    countdownElem.textContent = "まもなく開始";
+                } else if (upcoming.diffMinutes < 60) {
+                    countdownElem.textContent = `あと${upcoming.diffMinutes}分`;
+                } else if (upcoming.diffHours < 24) {
+                    countdownElem.textContent = `あと${upcoming.diffHours}時間${upcoming.diffMinutes % 60}分`;
+                } else {
+                    countdownElem.textContent = `あと${upcoming.diffDays}日 ${upcoming.diffHours % 24}時間`;
+                }
+
+                if (upcoming.diffMinutes <= 10 && upcoming.diffDays === 0) {
+                    card.classList.add('urgent');
+                } else {
+                    card.classList.remove('urgent');
+                }
+            } else {
+                nameElem.textContent = "全ステージが終了しました";
+                countdownElem.textContent = "DONE";
+                card.classList.remove('urgent');
+            }
+        }
+
+        function render() {
+            renderTimeline();
+            renderCafe();
+
+            const fieldContainer = document.getElementById('fieldActivityContainer');
+            fieldContainer.innerHTML = fieldActivities.map(act => {
+                const checked = !!fieldActivityStatus[act];
+                return `
+                    <label class="act-check-item ${checked ? 'completed' : ''}">
+                        <div class="act-check-left">
+                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleFieldActivity('${act}')">
+                            <span>${act}</span>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+
+            const tabsContainer = document.getElementById('categoryTabs');
+            tabsContainer.innerHTML = goodsCategories.map(group => {
+                let count = 0;
+                group.items.forEach(item => count += (inventory[item] || 0));
+                const isActive = group.id === activeCategoryId;
+                return `
+                    <button class="tab-chip ${isActive ? 'active' : ''}" onclick="selectCategory('${group.id}')">
+                        <span>${group.category}</span>
+                        <span class="tab-count">(${count})</span>
+                    </button>
+                `;
+            }).join('');
+
+            const activeGroup = goodsCategories.find(g => g.id === activeCategoryId) || goodsCategories[0];
+            if (activeGroup) {
+                const listContainer = document.getElementById('activeGoodsList');
+                listContainer.innerHTML = activeGroup.items.map(name => {
+                    const count = inventory[name] || 0;
+                    const isFav = !!favorites[name];
+
+                    let badgeHtml = "";
+                    if (count === 0) {
+                        badgeHtml = `<span class="status-tag tag-want">未所持</span>`;
+                    } else if (count >= 2) {
+                        badgeHtml = `<span class="status-tag tag-trade">交換可 (+${count - 1})</span>`;
+                    } else {
+                        badgeHtml = `<span class="status-tag tag-owned">所持</span>`;
+                    }
+
+                    return `
+                        <div class="goods-item">
+                            <div class="goods-info">
+                                <button class="btn-fav ${isFav ? 'active' : ''}" onclick="toggleFav('${name}')" title="お気に入り">
+                                    ${isFav ? '★' : '☆'}
+                                </button>
+                                <div class="goods-name-wrap">
+                                    <span class="goods-name ${isFav ? 'is-fav' : ''}">${name}</span>
+                                    ${badgeHtml}
+                                </div>
+                            </div>
+                            <div class="goods-controls">
+                                <button class="btn-ctrl" onclick="changeCount('${name}', -1)">−</button>
+                                <span class="count-value">${count}</span>
+                                <button class="btn-ctrl plus" onclick="changeCount('${name}', 1)">+</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const savedMemo = localStorage.getItem('ff_all_memo');
+            if (savedMemo !== null) {
+                document.getElementById('quickMemo').value = savedMemo;
+            }
+
+            tick();
+
+            localStorage.setItem('ff_all_inv', JSON.stringify(inventory));
+            localStorage.setItem('ff_all_fieldact', JSON.stringify(fieldActivityStatus));
+            localStorage.setItem('ff_all_favs', JSON.stringify(favorites));
+        }
+
+        function toggleFieldActivity(act) {
+            triggerHaptic();
+            fieldActivityStatus[act] = !fieldActivityStatus[act];
+            render();
+        }
+
+        function selectCategory(id) {
+            triggerHaptic();
+            activeCategoryId = id;
+            render();
+        }
+
+        function toggleFav(name) {
+            triggerHaptic();
+            favorites[name] = !favorites[name];
+            render();
+        }
+
+        function changeCount(name, delta) {
+            triggerHaptic();
+            const current = inventory[name] || 0;
+            inventory[name] = Math.max(0, current + delta);
+            render();
+        }
+
+        function openMapLightbox() {
+            const mapImg = document.getElementById('eventMapImage');
+            if (mapImg.style.display !== 'none') {
+                document.getElementById('mapLightbox').classList.add('active');
+            }
+        }
+        function closeMapLightbox() {
+            document.getElementById('mapLightbox').classList.remove('active');
+        }
+
+        function generateText(targetGroupId, mode) {
+            let text = "";
+            const targets = targetGroupId === 'all'
+                ? goodsCategories
+                : goodsCategories.filter(g => g.id === targetGroupId);
+
+            targets.forEach((group, idx) => {
+                if (mode === 'trade') {
+                    const gives = [];
+                    const wants = [];
+                    group.items.forEach(item => {
+                        const count = inventory[item] || 0;
+                        const isFav = favorites[item];
+                        if (count >= 2) {
+                            gives.push(`${item}×${count - 1}`);
+                        } else if (count === 0) {
+                            wants.push(isFav ? `${item}(本命)` : item);
+                        }
+                    });
+
+                    text += `【交換募集：${group.category}】\n`;
+                    text += `譲：${gives.length > 0 ? gives.join('、') : '（余りなし）'}\n`;
+                    text += `求：${wants.length > 0 ? wants.join('、') : '（指定なし）'}\n`;
+                } else {
+                    let groupText = `【${group.category}】\n`;
+                    let countAdded = 0;
+                    group.items.forEach(item => {
+                        const count = inventory[item] || 0;
+                        const isFav = favorites[item] ? '★' : '';
+                        if (mode === 'owned') {
+                            if (count > 0) {
+                                groupText += `・${item}${isFav}：${count}\n`;
+                                countAdded++;
+                            }
+                        } else {
+                            groupText += `・${item}${isFav}：${count}\n`;
+                            countAdded++;
+                        }
+                    });
+                    if (mode === 'owned' && countAdded === 0) groupText += `・（未所持）\n`;
+                    text += groupText;
+                }
+                if (idx < targets.length - 1) text += "\n";
+            });
+            return text.trim();
+        }
+
+        function openCurrentGroupModal() {
+            openSummaryModal(activeCategoryId);
+        }
+
+        function openSummaryModal(targetGroupId) {
+            triggerHaptic();
+            currentModalGroupId = targetGroupId;
+            const titleElem = document.getElementById('modalTitle');
+            if (targetGroupId === 'all') {
+                titleElem.innerText = "全グッズのサマリ出力";
+            } else {
+                const group = goodsCategories.find(g => g.id === targetGroupId);
+                titleElem.innerText = `【${group.category}】サマリ出力`;
+            }
+            changeSummaryMode(currentMode);
+            document.getElementById('summaryModal').classList.add('active');
+        }
+
+        function changeSummaryMode(mode) {
+            triggerHaptic();
+            currentMode = mode;
+            ['all', 'owned', 'trade'].forEach(m => {
+                document.getElementById(`mode-${m}`).classList.toggle('active', m === mode);
+            });
+            document.getElementById('previewText').value = generateText(currentModalGroupId, mode);
+        }
+
+        function closeModal() {
+            document.getElementById('summaryModal').classList.remove('active');
+        }
+
+        function executeCopy() {
+            triggerHaptic();
+            const text = document.getElementById('previewText').value;
+            if (!text) return;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("クリップボードにコピーしました");
+                closeModal();
+            }).catch(() => {
+                showToast("枠内の文字を手動コピーしてください");
+            });
+        }
+
+        function shareViaURL() {
+            triggerHaptic();
+            const dataObj = {
+                inv: inventory,
+                fieldact: fieldActivityStatus,
+                favs: favorites,
+                cafe: cafeOrders,
+                memo: document.getElementById('quickMemo').value
+            };
+            const jsonStr = JSON.stringify(dataObj);
+            const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+            const shareURL = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+
+            navigator.clipboard.writeText(shareURL).then(() => {
+                showToast("共有URLをコピーしました");
+            }).catch(() => {
+                prompt("URLをコピーして送ってください：", shareURL);
+            });
+        }
+
+        function resetAll() {
+            if (confirm("入力データをすべて初期化しますか？")) {
+                inventory = {};
+                fieldActivityStatus = {};
+                favorites = {};
+                cafeOrders = {};
+                localStorage.removeItem('ff_all_memo');
+                document.getElementById('quickMemo').value = "";
+                render();
+                showToast("データを初期化しました");
+            }
+        }
+
+        render();
+    </script>
+</body>
+</html>
